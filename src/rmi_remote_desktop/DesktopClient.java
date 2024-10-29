@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -202,7 +203,8 @@ public class DesktopClient extends JFrame implements ActionListener{
                             byte[] bytes = new byte[1024 * 1024];
                             bytes = stub.sendScreen();
                             BufferedImage bImage = ImageIO.read(new ByteArrayInputStream(bytes));
-                            label.setIcon(new ImageIcon(bImage));
+                            Image img = bImage.getScaledInstance(panel.getWidth(), panel.getHeight(), BufferedImage.SCALE_SMOOTH);
+                            label.setIcon(new ImageIcon(img));
                             try{
                                 Thread.sleep(1000);
                             }
