@@ -96,6 +96,7 @@ public class ScreenEventImpl extends UnicastRemoteObject implements ScreenEvent{
             robot.mousePress(InputEvent.BUTTON2_MASK);
         else if(buttonPressed == 3)								//Right Key
             robot.mousePress(InputEvent.BUTTON3_MASK);
+        System.out.println(buttonPressed);
     }
 
     @Override
@@ -106,16 +107,19 @@ public class ScreenEventImpl extends UnicastRemoteObject implements ScreenEvent{
             robot.mouseRelease(InputEvent.BUTTON2_MASK);
         else if(buttonReleased == 3)							//Right Key
             robot.mouseRelease(InputEvent.BUTTON3_MASK);
+        System.out.println(buttonReleased);
     }
 
     @Override
     public void keyPressed(int keyPressed) throws RemoteException {
         robot.keyPress(keyPressed);
+        System.out.println("key: " + keyPressed);
     }
 
     @Override
     public void keyReleased(int keyReleased) throws RemoteException {
         robot.keyRelease(keyReleased);
+        System.out.println("key: " + keyReleased);
     }
     
 }

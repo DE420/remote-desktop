@@ -234,6 +234,7 @@ public class DesktopClient extends JFrame implements ActionListener{
         public void keyPressed(KeyEvent e) {
             try {
                 stub.keyPressed(e.getKeyCode());
+                System.out.println("key: " + e.getKeyCode());
             }
             catch (RemoteException ex) {
                 ex.printStackTrace();
@@ -244,6 +245,7 @@ public class DesktopClient extends JFrame implements ActionListener{
         public void keyReleased(KeyEvent e) {
             try {
                 stub.keyReleased(e.getKeyCode());
+                System.out.println("key: " + e.getKeyCode());
             }
             catch (RemoteException ex) {
                 ex.printStackTrace();
@@ -273,6 +275,7 @@ public class DesktopClient extends JFrame implements ActionListener{
             int buttonPressed = e.getButton();
             try {
                 stub.mousePressedEvent(buttonPressed);
+                System.out.println("button: " + e.getButton());
             } 
             catch (RemoteException ex) {
                 ex.printStackTrace();
@@ -284,6 +287,7 @@ public class DesktopClient extends JFrame implements ActionListener{
             int buttonReleased = e.getButton();
             try {
                 stub.mouseReleasedEvent(buttonReleased);
+                System.out.println("button: " + e.getButton());
             }
             catch (RemoteException ex) {
                 ex.printStackTrace();
