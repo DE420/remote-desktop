@@ -23,24 +23,15 @@ import javax.imageio.ImageIO;
  *
  * @author Admin
  */
-public class ScreenEventImpl extends UnicastRemoteObject implements ScreenEvent {
-    private static final long serialVersionUID = 1L;
-    private Robot robot;
+public class ScreenEventImpl extends UnicastRemoteObject implements ScreenEvent{
+    private static final long serialVersionUID = 1L; //tuong thich phien ban khi truyen lop qua mang
+    Robot robot = null;
     String password;
     double width, height;
     
-    public ScreenEventImpl(String password) throws RemoteException {
+    public ScreenEventImpl(String password) throws RemoteException{
         super();
         this.password = password;
-        try {
-            // Khởi tạo Robot ngay trong constructor
-            GraphicsEnvironment graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            GraphicsDevice graphicsScreen = graphicsEnv.getDefaultScreenDevice();
-            this.robot = new Robot(graphicsScreen);
-        } catch (AWTException e) {
-            e.printStackTrace();
-            throw new RemoteException("Could not create Robot instance", e);
-        }
     }
 
     @Override
@@ -120,25 +111,15 @@ public class ScreenEventImpl extends UnicastRemoteObject implements ScreenEvent 
     }
 
     @Override
-    public void keyPressed(int keyCode) throws RemoteException {
-        try {
-            robot.keyPress(keyCode);
-            System.out.println("Server received keyPress: " + keyCode);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Invalid key code: " + keyCode);
-            e.printStackTrace();
-        }
+    public void keyPressed(int keyPressed) throws RemoteException {
+        robot.keyPress(keyPressed);
+        System.out.println("key: " + keyPressed);
     }
 
     @Override
-    public void keyReleased(int keyCode) throws RemoteException {
-        try {
-            robot.keyRelease(keyCode);
-            System.out.println("Server received keyRelease: " + keyCode);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Invalid key code: " + keyCode);
-            e.printStackTrace();
-        }
+    public void keyReleased(int keyReleased) throws RemoteException {
+        robot.keyRelease(keyReleased);
+        System.out.println("key: " + keyReleased);
     }
     
 }
