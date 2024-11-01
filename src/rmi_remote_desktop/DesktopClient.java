@@ -34,6 +34,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -144,113 +145,149 @@ public class DesktopClient extends JFrame implements ActionListener{
         }
     }
     
-    class ScreenFrame extends JFrame implements KeyListener, MouseMotionListener, MouseListener{
-        private static final long serialVersionUID = 1L; //tuong thich phien ban
-        JLabel label;
-        JPanel panel;
-        JInternalFrame internalFrame;
+    class ScreenFrame extends JFrame implements KeyListener, MouseMotionListener, MouseListener {
+    private static final long serialVersionUID = 1L;
+    JLabel label;
+    JPanel panel;
+    JInternalFrame internalFrame;
+    
+    public ScreenFrame() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (ClassNotFoundException e) {}
+        catch (InstantiationException e) {}
+        catch (IllegalAccessException e) {}
+        catch (UnsupportedLookAndFeelException e) {}
         
-        public ScreenFrame() {
-            try{
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        // Tạo các components
+        label = new JLabel();
+        JDesktopPane desktopPane = new JDesktopPane();
+        add(desktopPane, BorderLayout.CENTER);
+        panel = new JPanel();
+        panel.add(label);
+        
+        internalFrame = new JInternalFrame("Screen", true, true, true);
+        internalFrame.setLayout(new BorderLayout());
+        internalFrame.getContentPane().add(panel, BorderLayout.CENTER);
+        
+        // Cài đặt kích thước
+        Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        setSize(r.width, r.height);
+        
+        setMaximumSize(new Dimension(r.width, r.height));
+        setMinimumSize(new Dimension((int)(r.width /1.2), (int)(r.height /1.2)));
+        
+        internalFrame.setSize(getWidth(), getHeight());
+        internalFrame.setBorder(null);
+        ((javax.swing.plaf.basic.BasicInternalFrameUI) internalFrame.getUI()).setNorthPane(null);
+        
+        desktopPane.add(internalFrame);
+        
+        // Thêm các listener cho cả panel và internalFrame
+        panel.addKeyListener(this);
+        panel.addMouseListener(this);
+        panel.addMouseMotionListener(this);
+        
+        label.addKeyListener(this);
+        internalFrame.addKeyListener(this);
+        
+        // Đặt focusable cho cả panel và internalFrame
+        panel.setFocusable(true);
+        label.setFocusable(true);
+        internalFrame.setFocusable(true);
+        
+        setVisible(true);
+        internalFrame.setVisible(true);
+        
+        try {
+            internalFrame.setMaximum(true);
+        } catch (PropertyVetoException e) {
+            e.printStackTrace();
+        }
+        
+        setTitle("Remote Desktop");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        // Thêm FocusListener để debug focus
+        panel.addFocusListener(new java.awt.event.FocusListener() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                System.out.println("Panel gained focus");
             }
-            catch (ClassNotFoundException e) {}
-            catch (InstantiationException e) {}
-            catch (IllegalAccessException e) {}
-            catch (UnsupportedLookAndFeelException e) {}
             
-            //cua so man hinh cua ben may server
-            label = new JLabel();
-            JDesktopPane desktopPane = new JDesktopPane();
-            add(desktopPane, BorderLayout.CENTER);
-            panel = new JPanel();
-            panel.add(label);
-            
-            internalFrame = new JInternalFrame("Screen", true, true, true);
-            internalFrame.setLayout(new BorderLayout());
-            internalFrame.getContentPane().add(panel, BorderLayout.CENTER);
-            
-            //tim kich co man hinh may client de scale
-            Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-            setSize(r.width, r.height);
-            
-            setMaximumSize(new Dimension(r.width, r.height));
-            setMinimumSize(new Dimension((int)(r.width /1.2),(int)( r.height /1.2)));
-            
-            internalFrame.setSize(getWidth(), getHeight());
-            internalFrame.setBorder(null); //bo border cua man hinh trong cua so
-            ((javax.swing.plaf.basic.BasicInternalFrameUI) internalFrame.getUI()).setNorthPane(null);	 //bo header cua man hinh trong cua so
-            
-            desktopPane.add(internalFrame);
-            setVisible(true);
-            internalFrame.setVisible(true);
-            try {
-                    internalFrame.setMaximum(true);
-            } 
-            catch (PropertyVetoException e) {
-                    e.printStackTrace();
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                System.out.println("Panel lost focus");
             }
-            panel.setFocusable(true);
-            setTitle("Remote Desktop");
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            
-            //nhan man hinh tu may server
-            Thread thread = new Thread(new Runnable(){
-                @Override
-                public void run() {
-                    while(true){
-                        try{
-                            byte[] bytes = new byte[1024 * 1024];
-                            bytes = stub.sendScreen();
-                            BufferedImage bImage = ImageIO.read(new ByteArrayInputStream(bytes));
-                            Image img = bImage.getScaledInstance(panel.getWidth(), panel.getHeight(), BufferedImage.SCALE_SMOOTH);
-                            label.setIcon(new ImageIcon(img));
-                            try{
-                                Thread.sleep(1000);
-                            }
-                            catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        catch (RemoteException e) {
+        });
+        
+        // Request focus cho panel
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                panel.requestFocusInWindow();
+            }
+        });
+        
+        // Thread nhận màn hình
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    try {
+                        byte[] bytes = new byte[1024 * 1024];
+                        bytes = stub.sendScreen();
+                        BufferedImage bImage = ImageIO.read(new ByteArrayInputStream(bytes));
+                        Image img = bImage.getScaledInstance(panel.getWidth(), panel.getHeight(), BufferedImage.SCALE_SMOOTH);
+                        label.setIcon(new ImageIcon(img));
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                }                
-            }) ;
-            thread.start();
-            panel.addKeyListener(this);
-            panel.addMouseListener(this);
-            panel.addMouseMotionListener(this);
-        }
+                }
+            }                
+        });
+        thread.start();
+    }
 
-        @Override
-        public void keyTyped(KeyEvent e) {}
+    // Các methods xử lý sự kiện giữ nguyên
+    @Override
+    public void keyTyped(KeyEvent e) {}
 
-        @Override
-        public void keyPressed(KeyEvent e) {
-            try {
-                stub.keyPressed(e.getKeyCode());
-                System.out.println("key: " + e.getKeyCode());
-            }
-            catch (RemoteException ex) {
-                ex.printStackTrace();
-            }        
+    @Override
+    public void keyPressed(KeyEvent e) {
+        try {
+            int keyCode = e.getKeyCode();
+            // Thêm debug log
+            System.out.println("Client sending keyPress: " + keyCode + 
+                             " (" + KeyEvent.getKeyText(keyCode) + ")");
+            stub.keyPressed(keyCode);
+        } catch (RemoteException ex) {
+            System.out.println("Failed to send keyPress event to server");
+            ex.printStackTrace();
         }
+    }
 
-        @Override
-        public void keyReleased(KeyEvent e) {
-            try {
-                stub.keyReleased(e.getKeyCode());
-                System.out.println("key: " + e.getKeyCode());
-            }
-            catch (RemoteException ex) {
-                ex.printStackTrace();
-            }        
+    @Override
+    public void keyReleased(KeyEvent e) {
+        try {
+            int keyCode = e.getKeyCode();
+            // Thêm debug log
+            System.out.println("Client sending keyRelease: " + keyCode + 
+                             " (" + KeyEvent.getKeyText(keyCode) + ")");
+            stub.keyReleased(keyCode);
+        } catch (RemoteException ex) {
+            System.out.println("Failed to send keyRelease event to server");
+            ex.printStackTrace();
         }
+    }
 
         @Override
         public void mouseDragged(MouseEvent e) {}
